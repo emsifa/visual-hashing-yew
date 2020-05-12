@@ -117,11 +117,11 @@ impl Component for App {
                     <footer class="info text-center text-gray-600 mt-3">
                         <p>
                             { "Written by " }
-                            <a href="https://github.com/emsifa/yew-visual-hashing" target="_blank" class="text-teal-600 font-semibold">{ "Muhammad Syifa" }</a>
+                            <a href="https://github.com/emsifa/visual-hashing-yew" target="_blank" class="text-teal-600 font-semibold">{ "Muhammad Syifa" }</a>
                         </p>
                         <p class="text-sm">
                             { "As implementation of " }
-                            <a href="https://yew.rs/doc" target="_blank" class="text-teal-600 font-semibold">{ "Yew (WASM)" }</a>
+                            <a href="https://yew.rs" target="_blank" class="text-teal-600 font-semibold">{ "Yew (WASM)" }</a>
                             {" version of " }
                             <a href="https://github.com/gungunfebrianza/Visual-Hashing" target="_blank" class="text-teal-600 font-semibold">{ "Visual Hashing" }</a>
                             { " by " }

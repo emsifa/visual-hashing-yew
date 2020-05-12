@@ -1,5 +1,5 @@
 [package]
-name = "visual-hashing"
+name = "visual-hashing-yew"
 version = "0.1.0"
 authors = ["Muhammad Syifa <emsifa@gmail.com"]
 edition = "2018"

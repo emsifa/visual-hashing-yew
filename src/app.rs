@@ -18,6 +18,7 @@ pub struct State {
     value: String,
 }
 
+#[derive(Debug)]
 pub struct Xors {
     x: i32,
     y: i32,
@@ -35,6 +36,16 @@ pub enum S {
     Cos,
     Sin,
     None
+}
+
+impl std::fmt::Debug for S {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            S::Cos => write!(f, "S::Cos"),
+            S::Sin => write!(f, "S::Sin"),
+            S::None => write!(f, "S::None"),
+        }
+    }
 }
 
 impl Component for App {
@@ -60,18 +71,19 @@ impl Component for App {
             Msg::RenderCanvas(evt) => {
                 evt.prevent_default();
                 self.visual_hash(self.state.value.clone());
-                false
             }
             Msg::UpdateValue(val) => {
                 println!("Input: {}", val);
                 self.state.value = val;
-                true
             }
         }
+        false
     }
 
     fn rendered(&mut self, _first_render: bool) {
         let canvas = self.canvas_ref.cast::<HtmlCanvasElement>().unwrap();
+        canvas.set_height(0);
+        canvas.set_width(400);
         
         let ctx: CanvasRenderingContext2d = canvas
             .get_context("2d")
@@ -88,7 +100,7 @@ impl Component for App {
 
     fn view(&self) -> Html {
         html! {
-            <div class="wrapper flex justify-center content-center flex-wrap w-full h-screen bg-gray-200">
+            <div class="font-sans wrapper flex justify-center content-center flex-wrap w-full h-screen bg-gray-200">
                 <div class="w-10/12 md:w-2/4 lg:w-1/4">
                     <h1 class="text-center text-3xl font-semibold mb-3 text-gray-600">{ "Visual Hashing" }</h1>
                     <section class="content w-full">
@@ -100,9 +112,9 @@ impl Component for App {
                                 oninput=self.link.callback(|e: InputData| Msg::UpdateValue(e.value))
                             />
                         </form>
-                        <canvas ref={self.canvas_ref.clone()} />
+                        <canvas ref={self.canvas_ref.clone()} class="w-full"/>
                     </section>
-                    <footer class="info text-center text-gray-600">
+                    <footer class="info text-center text-gray-600 mt-3">
                         <p>
                             { "Written by " }
                             <a href="https://github.com/emsifa/yew-visual-hashing" target="_blank" class="text-teal-600 font-semibold">{ "Muhammad Syifa" }</a>
@@ -132,19 +144,27 @@ impl App {
         xors.x = xors.y;
         xors.y = xors.z;
         xors.z = xors.w;
-        xors.w = xors.w ^ (xors.w >> 19) ^ (t ^ (t >> 8));
+        let w2 = xors.w as u32 >> 19;
+        let t2 = t as u32 >> 8;
+        xors.w = (xors.w ^ (w2 as i32)) ^ (t ^ (t2 as i32));
         (xors.w as f64 / 4294967296.0) + 0.5
     }
 
     fn stp(&mut self, text: String) {
         let mut c = [123456789, 362436069, 521288629, 0];
+        let canvas = self.canvas.clone().unwrap();
+        canvas.set_height(400);
+        canvas.set_width(400);
+        
         let ctx = self.ctx.clone().unwrap();
 
-        for i in 0..4 {
-            let char_code = text.bytes().nth(i).unwrap() as i32;
-            let x = ((i * 11) % 16) as i32;
-            c[(i + 3) % 4] ^= char_code << x;
+        for (b, _) in text.clone().bytes().enumerate() {
+            let left = text.bytes().nth(b).unwrap() as i32;
+            let right = ((b * 11) % 16) as i32;
+            info!("left: {}, right: {}", left, right);
+            c[(b + 3) % 4] ^= left << right;
         }
+        info!("c: {:?}", c);
 
         let mut xors = Xors {
             x: c[0],
@@ -156,12 +176,12 @@ impl App {
         for _ in 0..52 {
             self.rand(&mut xors);
         }
-
+        
         let nn = match self.fi(&mut xors) {
-            true => 17,
+            true => 7,
             false => 11
         };
-
+        
         let size = 4620;
         
         ctx.set_global_composite_operation("source-over")
@@ -172,6 +192,7 @@ impl App {
         
         ctx.set_global_composite_operation("lighter")
         .expect("Failet to set global composite operation to 'lighter'");
+
         
         let mut h: [f64; 8] = [0.0; 8];
         h[2] = 0.3 + self.rand(&mut xors) * 0.2;
@@ -180,7 +201,6 @@ impl App {
         h[6] = 1.0 + self.rand(&mut xors);
         h[7] = 1.0 + self.rand(&mut xors);
         h[0] = 0.4 + self.rand(&mut xors) * 0.2;
-        
         for a in 2..8 {
             if self.fi(&mut xors) {
                 h[a] *= -1.0;
@@ -200,19 +220,17 @@ impl App {
             (S::None, S::None),
         ];
         let mut q: [f64; 8] = [0.0; 8];
-        let pr = (1.0 + self.rand(&mut xors) * (nn - 1) as f64) / nn as f64;
-
-
+        let pr: f64 = ((1.0 + self.rand(&mut xors) * (nn - 1) as f64) as i32 | 0) as f64 / nn as f64;
+        
         for a in 0..2 {
             if self.fi(&mut xors) {
                 s[a] = (S::Cos, S::Sin);
                 q[a] = self.rg(&mut ki, &mut xors) - pr;
             } else {
                 s[a] = (S::Sin, S::Cos);
-                q[a] = self.rg(&mut ki, &mut xors) + pr;
+                q[a] = self.rg(&mut gu, &mut xors) + pr;
             }
         }
-
 
         for a in 2..8 {
             let mut b = self.fi(&mut xors);
@@ -241,7 +259,7 @@ impl App {
         let mut n: Vec<f64> = vec![0.0, 0.0, 0.0];
         let mut p: Vec<[f64; 2]> = vec![];
         
-        for a in 0..2 {
+        for a in 0..3 {
             n[a] = match self.fi(&mut xors) {
                 true => 1.0,
                 false => -1.0
@@ -251,6 +269,7 @@ impl App {
         let step = PI * 2.0 / (size as f64) * (nn as f64);
         let mut r = 0.0;
         let mut f = 0;
+
         while f < size {
             let c1 = self.calc(s[3].0.clone(), r * q[3]);
             let bf = self.calc(s[6].0.clone(), r * q[6] + c1 * h[5]) * n[0];
@@ -283,8 +302,8 @@ impl App {
                 for bi in 0..3 {
                     let ci = p[(ah as i32 + bi * ((dx + 1) * hx)) as usize % p.len()];
                     ei.push(ci);
-                    ctx.line_to(c[0] as f64, c[1] as f64);
-                }
+                    ctx.line_to(ci[0] as f64, ci[1] as f64);
+                }   
                 
                 let mut fa = ei[0][0] * (ei[1][1] - ei[2][1]);
                 fa += ei[1][0] * (ei[2][1] - ei[0][1]);
@@ -306,9 +325,10 @@ impl App {
     }
 
     fn rg(&mut self, ha: &mut Vec<i32>, xors: &mut Xors) -> f64 {
-        let a = (ha.len() as usize * self.rand(xors) as usize) | 0;
-        let b = ha[a];
-        ha[a] = ha[ha.len() - 1];
+        let c = self.rand(xors);
+        let a = (ha.len() as f64 * c as f64) as i32 | 0;
+        let b = ha[a as usize];
+        ha[a as usize] = ha[ha.len() - 1];
         ha.pop();
         b as f64
     }

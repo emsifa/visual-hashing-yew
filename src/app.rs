@@ -100,13 +100,13 @@ impl Component for App {
 
     fn view(&self) -> Html {
         html! {
-            <div class="font-sans wrapper flex justify-center content-center flex-wrap w-full h-screen bg-gray-200">
+            <div class="font-sans wrapper flex justify-center content-center flex-wrap w-full h-screen bg-gray-900">
                 <div class="w-10/12 md:w-2/4 lg:w-1/4">
-                    <h1 class="text-center text-3xl font-semibold mb-3 text-gray-600">{ "Visual Hashing" }</h1>
+                    <h1 class="text-center text-3xl font-semibold mb-3 text-gray-700">{ "Visual Hashing" }</h1>
                     <section class="content w-full">
                         <form onsubmit=self.link.callback(|e: Event| Msg::RenderCanvas(e))>
                             <input
-                                class="bg-purple-white shadow rounded border-0 p-3 w-full"
+                                class="bg-gray-800 shadow rounded border-0 border-gray-700 text-gray-600 p-3 w-full"
                                 placeholder="Put your name or a text, then press ENTER"
                                 value=&self.state.value
                                 oninput=self.link.callback(|e: InputData| Msg::UpdateValue(e.value))
@@ -187,7 +187,7 @@ impl App {
         ctx.set_global_composite_operation("source-over")
         .expect("Failed to set global composite operation to 'source-over'");
         
-        ctx.set_fill_style(&JsValue::from("rgb(0, 0, 0)"));
+        ctx.set_fill_style(&JsValue::from("rgb(26, 32, 44)"));
         ctx.fill_rect(0.0, 0.0, 400.0, 400.0);
         
         ctx.set_global_composite_operation("lighter")

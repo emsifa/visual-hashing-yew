@@ -112,7 +112,7 @@ impl Component for App {
                                 oninput=self.link.callback(|e: InputData| Msg::UpdateValue(e.value))
                             />
                         </form>
-                        <canvas ref={self.canvas_ref.clone()} class="w-full"/>
+                        <canvas id="canvas" ref={self.canvas_ref.clone()} class="spin w-full"/>
                     </section>
                     <footer class="info text-center text-gray-600 mt-3">
                         <p>
@@ -187,7 +187,7 @@ impl App {
         ctx.set_global_composite_operation("source-over")
         .expect("Failed to set global composite operation to 'source-over'");
         
-        ctx.set_fill_style(&JsValue::from("rgb(26, 32, 44)"));
+        ctx.set_fill_style(&JsValue::from("rgba(26, 32, 44, 0)"));
         ctx.fill_rect(0.0, 0.0, 400.0, 400.0);
         
         ctx.set_global_composite_operation("lighter")
